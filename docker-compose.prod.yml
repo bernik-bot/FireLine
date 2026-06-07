@@ -1,0 +1,43 @@
+# Production-ish stack: the API on Postgres. Reads secrets from a .env file
+# next to this one (see .env.example). Put a TLS reverse proxy (Caddy/nginx/
+# Traefik) in front of the api service for real deployments — do not expose
+# 8000 to the internet directly.
+#
+#   cp .env.example .env   # then fill in DB_PASSWORD + BLACKBIRCH_SIGNING_KEY
+#   docker compose -f docker-compose.prod.yml up -d --build
+services:
+  api:
+    build: ./services/core-api
+    restart: unless-stopped
+    environment:
+      BLACKBIRCH_DB_URL: postgresql://blackbirch:${DB_PASSWORD}@postgres:5432/blackbirch
+      BLACKBIRCH_SIGNING_KEY: ${BLACKBIRCH_SIGNING_KEY}
+      BLACKBIRCH_WEBHOOK_URL: ${BLACKBIRCH_WEBHOOK_URL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"   # bound to localhost; reverse proxy terminates TLS
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: blackbirch
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: blackbirch
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blackbirch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata: {}

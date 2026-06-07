@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.db
+.venv/
+venv/
+.env
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.DS_Store
+
+# never commit signing keys
+*.key
+*.pem

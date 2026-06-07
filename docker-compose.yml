@@ -1,0 +1,16 @@
+# Optional backing services for moving off SQLite. The spine runs without these.
+# Start them, then:  export BLACKBIRCH_DB_URL=postgresql://blackbirch:blackbirch@localhost:5432/blackbirch
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: blackbirch
+      POSTGRES_PASSWORD: blackbirch
+      POSTGRES_DB: blackbirch
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+volumes:
+  pgdata:
