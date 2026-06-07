@@ -15,6 +15,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install
-        run: pip install -e ".[dev]"
+        run: pip install fastapi "uvicorn[standard]" sqlmodel cryptography pytest httpx
       - name: Test
         run: pytest -q
